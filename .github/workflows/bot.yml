@@ -1,0 +1,30 @@
+name: BTC Bot
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # запуск каждые 15 минут
+  workflow_dispatch:          # можно запускать вручную кнопкой
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run bot
+        run: python btc_bot.py
+
+      - name: Upload archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: archive-${{ github.run_id }}
+          path: archive/**
