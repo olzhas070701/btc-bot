@@ -23,8 +23,10 @@ jobs:
       - name: Run bot
         run: python btc_bot.py
 
-      - name: Upload archive
-        uses: actions/upload-artifact@v4
-        with:
-          name: archive-${{ github.run_id }}
-          path: archive/**
+      - name: Commit results
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add archive/*
+          git commit -m "Update archive" || echo "No changes to commit"
+          git push
