@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -25,8 +27,8 @@ jobs:
 
       - name: Commit results
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
           git add archive/*
           git commit -m "Update archive" || echo "No changes to commit"
           git push
