@@ -150,7 +150,8 @@ def get_reserve_move(df_1h, df_1d, atr):
 
 def main():
     try:
-        almaty_tz = pytz.timezone('Asia/Almaty')
+        # Часовой пояс Алматы (UTC+5)
+        almaty_tz = pytz.timezone('Etc/GMT-5')
         almaty_time = datetime.now(almaty_tz)
         date_str = almaty_time.strftime('%Y-%m-%d %H:%M:%S')
         logging.info("Начало работы скрипта: %s", date_str)
@@ -191,6 +192,7 @@ def main():
         logging.info("Запас хода: %s", reserve_status)
     except Exception as e:
         logging.exception("Ошибка в main: %s", e)
+
 
 if __name__ == "__main__":
     main()
