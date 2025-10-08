@@ -14,7 +14,7 @@ BASE_FILES = {
     "ohlcv_1h": "btc_ohlcv_1h",
     "ohlcv_1d": "btc_ohlcv_1d"
 }
-SYMBOL_FUTURES = "BTC-USD-SWAP"
+SYMBOL_FUTURES = "BTC-USDT"
 TIMEFRAMES = {"1h": "1H", "1d": "1D"}
 ATR_PERIOD = 14
 ROUND_LEVELS = [1000, 500, 100]
