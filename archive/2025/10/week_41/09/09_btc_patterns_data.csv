@@ -1,3 +1,5 @@
 pattern,level_price,timestamp
 false_breakout,123323.8,2025-10-08 18:00:00
 bounce,123323.8,2025-10-08 18:00:00
+false_breakout,123323.8,2025-10-08 18:00:00
+bounce,123323.8,2025-10-08 18:00:00
