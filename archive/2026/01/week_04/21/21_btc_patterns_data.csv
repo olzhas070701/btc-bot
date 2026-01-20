@@ -1,3 +1,7 @@
 pattern,level_price,timestamp
 bounce,89444.0,2026-01-20 18:00:00
 false_breakout,89444.0,2026-01-20 19:00:00
+false_breakout,89444.0,2026-01-20 20:00:00
+bounce,89444.0,2026-01-20 20:00:00
+false_breakout,89400.0,2026-01-20 20:00:00
+bounce,89400.0,2026-01-20 20:00:00
