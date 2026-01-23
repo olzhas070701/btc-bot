@@ -1,38 +1,36 @@
-name: BTC Bot OKX
+name: Update BTC bot data
 
 on:
-  schedule:
-    - cron: "*/5 * * * *"
   workflow_dispatch:
-
-permissions:
-  contents: write
+  schedule:
+    - cron: "*/15 * * * *"   # каждые 15 минут (не “раз в час”)
 
 jobs:
-  run-bot:
+  run:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install deps
         run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install -r requirements.txt
 
       - name: Run bot
         run: |
           python btc_bot.py
 
-      - name: Commit and push changes (archive updates)
+      - name: Commit archive
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Update BTC bot data" || echo "No changes to commit"
+          git add archive/**
+          git commit -m "Update BTC bot data" || echo "No changes"
           git push
