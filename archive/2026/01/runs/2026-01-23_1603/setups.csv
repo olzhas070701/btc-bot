@@ -1,0 +1,2 @@
+time_almaty,instId,price,status,side,reason,level,entry,sl,tp,rr,atr_h1
+2026-01-23 16:03:16.898378+05:00,BTC-USDT-SWAP,88980.9,NO_TRADE,none,no impulse: move=303 < 0.80*ATR,,,,,,425.1664396346536
