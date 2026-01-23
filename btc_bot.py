@@ -51,7 +51,7 @@ RETRIES = 4
 # =========================
 
 def _now_almaty() -> pd.Timestamp:
-    return pd.Timestamp.utcnow().tz_localize("UTC").tz_convert(TZ)
+    return pd.Timestamp.now("UTC").tz_convert(TZ)
 
 def _safe_request(url: str, params: Dict) -> Dict:
     last_err = None
