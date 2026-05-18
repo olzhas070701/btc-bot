@@ -1,0 +1,2 @@
+timestamp,inst,price,status,reason,direction,level,atr_1h,who_punished
+2026-05-18 19:10:00,BTC-USDT-SWAP,76661.1,СДЕЛКА,ЕСТЬ СВИП + ОТКАЗ + РЕТЕСТ (валидный лонг),long,76633.3,499.52857142857,накажут продавцов
