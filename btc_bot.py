@@ -53,6 +53,8 @@ LATEST_ROOT = "latest"
 
 BASE_FILES = {
     "levels": "btc_levels_data",
+    "auto_levels": "btc_levels_auto_data",
+    "ohlcv_5m": "btc_ohlcv_5m",
     "patterns": "btc_patterns_data",
     "ohlcv_1h": "btc_ohlcv_1h",
     "ohlcv_1d": "btc_ohlcv_1d",
@@ -101,6 +103,7 @@ def get_archive_path(date_str: str) -> str:
 def ensure_dirs():
     os.makedirs(ARCHIVE_ROOT, exist_ok=True)
     os.makedirs(LATEST_ROOT, exist_ok=True)
+    os.makedirs("config", exist_ok=True)
 
 
 def save_to_archive(df: pd.DataFrame, base_filename: str, date_str: str, header=True, also_latest=True) -> str:
@@ -111,8 +114,15 @@ def save_to_archive(df: pd.DataFrame, base_filename: str, date_str: str, header=
 
     # 1) архив
     file_path = os.path.join(archive_dir, f"{day}_{base_filename}.csv")
-    mode = "a" if os.path.exists(file_path) else "w"
-    df.to_csv(file_path, mode=mode, header=header and mode == "w", index=False)
+    if os.path.exists(file_path):
+        # Повторные запуски могут пересекаться по одним и тем же свечам.
+        # Убираем точные дубли, сохраняя историю без повторяющихся строк.
+        old = pd.read_csv(file_path)
+        combined = pd.concat([old, df], ignore_index=True)
+        combined = combined.drop_duplicates()
+        combined.to_csv(file_path, index=False)
+    else:
+        df.to_csv(file_path, index=False, header=header)
 
     # 2) latest
     if also_latest:
@@ -180,6 +190,13 @@ def fetch_ohlcv(inst_id: str, bar: str, limit: int = LIMIT) -> pd.DataFrame:
 
     # OKX newest-first -> reverse
     df = df.iloc[::-1].reset_index(drop=True)
+
+    # В анализ допускаем только полностью закрытые свечи.
+    # OKX confirm=1 означает закрытую свечу, confirm=0 — текущую незакрытую.
+    if "confirm" in df.columns:
+        df = df[df["confirm"].astype(str) == "1"].copy()
+        df = df.reset_index(drop=True)
+
     return df
 
 
@@ -232,10 +249,11 @@ def find_key_levels_auto(df_1h: pd.DataFrame) -> List[Tuple[str, float, datetime
 
 def load_user_levels_from_latest() -> List[Tuple[str, float, datetime]]:
     """
-    Читает уровни пользователя из latest/btc_levels_data.csv
+    Читает ТОЛЬКО пользовательские уровни из config/btc_levels_data.csv.
+    Автоматические уровни хранятся отдельно и не могут перезаписать этот файл.
     Ожидаемые колонки: type, price, timestamp
     """
-    path = os.path.join(LATEST_ROOT, f"{BASE_FILES['levels']}.csv")
+    path = os.path.join("config", f"{BASE_FILES['levels']}.csv")
     if not os.path.exists(path):
         return []
 
@@ -776,12 +794,12 @@ def main():
         # 1) Авто-уровни (fallback)
         auto_levels = find_key_levels_auto(df_1h)
 
-        # 2) Всегда сохраняем авто-уровни в архив+latest как базу (чтобы файл был)
+        # 2) Авто-уровни сохраняем отдельно — пользовательские уровни не трогаем.
         if auto_levels:
             df_levels_auto = pd.DataFrame(auto_levels, columns=["type", "price", "timestamp"])
-            save_to_archive(df_levels_auto, BASE_FILES["levels"], date_str, header=True)
+            save_to_archive(df_levels_auto, BASE_FILES["auto_levels"], date_str, header=True)
 
-        # 3) Читаем ТВОИ уровни из latest (если ты их заменил руками — они приоритет)
+        # 3) Пользовательские уровни читаются из config/btc_levels_data.csv.
         user_levels = load_user_levels_from_latest()
 
         # 4) Выбираем уровни
@@ -789,9 +807,10 @@ def main():
 
         # Паттерны (H1) относительно уровней
         patterns = check_patterns_1h(df_1h, key_levels)
-        if patterns:
-            df_patterns = pd.DataFrame(patterns, columns=["pattern", "level_price", "timestamp"])
-            save_to_archive(df_patterns, BASE_FILES["patterns"], date_str, header=True)
+        df_patterns = pd.DataFrame(patterns, columns=["pattern", "level_price", "timestamp"])
+        if df_patterns.empty:
+            df_patterns = pd.DataFrame(columns=["pattern", "level_price", "timestamp"])
+        save_to_archive(df_patterns, BASE_FILES["patterns"], date_str, header=True)
 
         # Сетапы / точки внимания
         setups_rows, attention_rows = assess_setups(df_5m=df_5m, df_1h=df_1h, key_levels=key_levels)
@@ -800,10 +819,14 @@ def main():
 
         if not df_setups.empty:
             save_to_archive(df_setups, BASE_FILES["setups"], date_str, header=True)
-        if not df_attention.empty:
-            save_to_archive(df_attention, BASE_FILES["attention"], date_str, header=True)
+        if df_attention.empty:
+            df_attention = pd.DataFrame(columns=[
+                "timestamp", "inst", "price", "type", "level", "comment", "atr_1h"
+            ])
+        save_to_archive(df_attention, BASE_FILES["attention"], date_str, header=True)
 
-        # Сохраняем OHLCV
+        # Сохраняем OHLCV всех используемых таймфреймов.
+        save_to_archive(df_5m, BASE_FILES["ohlcv_5m"], date_str, header=True)
         save_to_archive(df_1h, BASE_FILES["ohlcv_1h"], date_str, header=True)
         save_to_archive(df_1d, BASE_FILES["ohlcv_1d"], date_str, header=True)
 
