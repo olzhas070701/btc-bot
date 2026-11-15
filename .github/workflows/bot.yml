@@ -31,8 +31,8 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add archive/*
-          git commit -m "Update archive (run ${{ github.run_id }})" || echo "No changes to commit"
+          git add archive/ latest/ config/
+          git commit -m "Update BTC bot data (run ${{ github.run_id }})" || echo "No changes to commit"
           git push
 
       # 👉 Вариант 2: Скачиваемый архив (Artifacts)
